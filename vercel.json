@@ -1,0 +1,19 @@
+{
+  "functions": {
+    "app/api/analyze/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/advanced/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/translate/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/rates/route.ts": {
+      "maxDuration": 15
+    },
+    "app/api/stripe/webhook/route.ts": {
+      "maxDuration": 15
+    }
+  }
+}

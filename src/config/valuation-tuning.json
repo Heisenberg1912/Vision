@@ -1,0 +1,909 @@
+{
+  "weights": {
+    "comparableAnchor": 0.34,
+    "microMarket": 0.18,
+    "geo": 0.12,
+    "policyZoning": 0.12,
+    "ageResale": 0.14,
+    "liquidity": 0.1
+  },
+  "confidence": {
+    "base": 64,
+    "missingLocationPenalty": 18,
+    "missingGpsPenalty": 12,
+    "noComparablesPenalty": 30,
+    "fewComparablesPenalty": 20,
+    "strongComparablesBonus": 14,
+    "zoneMismatchPenalty": 18,
+    "highHazardPenalty": 14,
+    "policyUncertainPenalty": 10,
+    "stableGrowthBonus": 8,
+    "clearZoneFitBonus": 6,
+    "lowHazardBonus": 6
+  },
+  "spreadByConfidence": [
+    {
+      "min": 85,
+      "spread": 0.12
+    },
+    {
+      "min": 70,
+      "spread": 0.18
+    },
+    {
+      "min": 55,
+      "spread": 0.24
+    },
+    {
+      "min": 40,
+      "spread": 0.32
+    },
+    {
+      "min": 0,
+      "spread": 0.42
+    }
+  ],
+  "haircuts": {
+    "lowSideExtra": 0.03,
+    "highSideExtra": 0.03,
+    "fallbackNoCompsExtraSpread": 0.06,
+    "hazardExtraSpread": 0.03
+  },
+  "limits": {
+    "minValue": 50000,
+    "maxValue": 12000000000,
+    "minComparablesForAnchor": 6,
+    "strongComparables": 25,
+    "minConfidence": 5,
+    "maxConfidence": 98,
+    "maxWarningsForSpread": 4
+  },
+  "builtAreaSqmDefaults": {
+    "Residential": {
+      "Low-rise": 110,
+      "Mid-rise": 5200,
+      "High-rise": 42000,
+      "Large-site": 17000
+    },
+    "Commercial": {
+      "Low-rise": 1200,
+      "Mid-rise": 18000,
+      "High-rise": 95000,
+      "Large-site": 45000
+    },
+    "Industrial": {
+      "Low-rise": 3500,
+      "Mid-rise": 30000,
+      "High-rise": 120000,
+      "Large-site": 180000
+    },
+    "Mixed-use": {
+      "Low-rise": 2000,
+      "Mid-rise": 26000,
+      "High-rise": 130000,
+      "Large-site": 70000
+    },
+    "Infrastructure": {
+      "Low-rise": 8000,
+      "Mid-rise": 70000,
+      "High-rise": 250000,
+      "Large-site": 220000
+    },
+    "Agricultural": {
+      "Low-rise": 900,
+      "Mid-rise": 6000,
+      "High-rise": 20000,
+      "Large-site": 40000
+    },
+    "Recreational/Cultural": {
+      "Low-rise": 1500,
+      "Mid-rise": 15000,
+      "High-rise": 50000,
+      "Large-site": 70000
+    },
+    "Institutional": {
+      "Low-rise": 1800,
+      "Mid-rise": 22000,
+      "High-rise": 75000,
+      "Large-site": 60000
+    }
+  },
+  "unitRatesUsdPerSqm": {
+    "Residential": {
+      "low": 650,
+      "medium": 1100,
+      "high": 2400
+    },
+    "Commercial": {
+      "low": 850,
+      "medium": 1700,
+      "high": 3600
+    },
+    "Industrial": {
+      "low": 350,
+      "medium": 700,
+      "high": 1200
+    },
+    "Mixed-use": {
+      "low": 900,
+      "medium": 1800,
+      "high": 3400
+    },
+    "Infrastructure": {
+      "low": 300,
+      "medium": 600,
+      "high": 1200
+    }
+  },
+  "landAreaMultiplierByScale": {
+    "Low-rise": 1.9,
+    "Mid-rise": 1.25,
+    "High-rise": 1.1,
+    "Large-site": 2.2
+  },
+  "landRateMultiplierByType": {
+    "Residential": 0.5,
+    "Commercial": 0.62,
+    "Industrial": 0.45,
+    "Mixed-use": 0.56,
+    "Infrastructure": 0.38,
+    "Agricultural": 0.35,
+    "Recreational/Cultural": 0.42,
+    "Institutional": 0.48
+  },
+  "completionByStage": {
+    "Planning": 0.08,
+    "Foundation": 0.2,
+    "Structure": 0.45,
+    "Services": 0.68,
+    "Finishing": 0.86,
+    "Completed": 1
+  },
+  "locationSignals": {
+    "ultraPrime": [
+      "south mumbai",
+      "manhattan",
+      "new york",
+      "london",
+      "singapore",
+      "hong kong",
+      "dubai",
+      "tokyo",
+      "zurich",
+      "geneva",
+      "paris",
+      "monaco"
+    ],
+    "prime": [
+      "mumbai",
+      "delhi",
+      "bengaluru",
+      "bangalore",
+      "hyderabad",
+      "chennai",
+      "pune",
+      "gurgaon",
+      "noida",
+      "seattle",
+      "austin",
+      "sydney",
+      "melbourne",
+      "san francisco",
+      "los angeles",
+      "toronto",
+      "shanghai",
+      "beijing"
+    ],
+    "budget": [
+      "rural",
+      "village",
+      "remote",
+      "small town",
+      "township"
+    ]
+  },
+  "microcopy": {
+    "terrainSoil": "Means: base construction risk. Inputs: terrain+soil+image cues. Assumption: no borelog provided.",
+    "climateDensity": "Means: demand and execution pressure. Inputs: climate+density signals. Assumption: seasonality is typical.",
+    "masterPlanZone": "Means: allowed use and value ceiling. Inputs: master-plan zone+project type. Assumption: current zoning remains active.",
+    "politicalLeaning": "Means: approvals and demand bias. Inputs: policy posture+policy focus. Assumption: policy stance stays near-term stable.",
+    "comparableActivity": "Means: market anchor depth. Inputs: comp count+activity level. Assumption: comps are locally relevant.",
+    "typology": "Means: asset class fit. Inputs: category matrix typology. Assumption: image classification is correct.",
+    "stage": "Means: current execution phase. Inputs: progress+stage inference. Assumption: photo reflects current site status.",
+    "propertyVal": "Means: total asset value band. Inputs: comps, geo, zoning, age, growth. Assumption: no hidden legal defects.",
+    "landVal": "Means: land-only value band. Inputs: land share, zoning, location, land growth. Assumption: title and access are clean.",
+    "projectVal": "Means: as-is project value band. Inputs: stage completion + land + market factors. Assumption: build quality is standard.",
+    "policyFocus": "Means: planning intent driver. Inputs: policy focus + zoning context. Assumption: no abrupt policy reversal.",
+    "cityGrowth": "Means: top-down momentum. Inputs: city 5Y growth estimate. Assumption: trend does not sharply reverse.",
+    "propertyGrowth": "Means: built-asset trend. Inputs: local property growth estimate. Assumption: sample market is representative.",
+    "landGrowth": "Means: land demand trend. Inputs: local land growth estimate. Assumption: supply additions remain normal.",
+    "propertyAge": "Means: depreciation pressure. Inputs: inferred age and condition. Assumption: maintenance quality is average.",
+    "resaleValue": "Means: exit strength index. Inputs: age, liquidity, demand fit. Assumption: no distress sale required.",
+    "roiEst": "Means: return potential estimate. Inputs: growth, liquidity, policy, comparables. Assumption: entry cost is market-aligned.",
+    "valuationPanel": "Means: valuation is range-based. Inputs: A-F weighted model + confidence spread. Assumption: no off-book constraints.",
+    "roiMeter": "Means: normalized ROI signal. Inputs: inferred ROI estimate. Assumption: hold period and financing are typical.",
+    "marketPerformance": "Means: momentum diagnostics. Inputs: growth, age, resale, ROI. Assumption: macro conditions stay neutral."
+  },
+  "typologyClassFallbackUsdPerSqm": {
+    "Residential": {
+      "base": 800,
+      "max": 6000
+    },
+    "Commercial": {
+      "base": 1000,
+      "max": 8000
+    },
+    "Industrial": {
+      "base": 600,
+      "max": 4000
+    },
+    "Agricultural": {
+      "base": 300,
+      "max": 2000
+    },
+    "Recreational/Cultural": {
+      "base": 800,
+      "max": 6000
+    },
+    "Institutional": {
+      "base": 1000,
+      "max": 7000
+    },
+    "Mixed-use": {
+      "base": 1100,
+      "max": 10000
+    },
+    "Infrastructure": {
+      "base": 800,
+      "max": 6000
+    }
+  },
+  "typologyAnchorsUsdPerSqm": {
+    "Apartment / Studio / Loft": {
+      "class": "Residential",
+      "base": 600,
+      "max": 4000,
+      "aliases": [
+        "apartment",
+        "studio apartment",
+        "studio",
+        "loft"
+      ]
+    },
+    "Condominium / Duplex / Triplex / Row House": {
+      "class": "Residential",
+      "base": 700,
+      "max": 5000,
+      "aliases": [
+        "condominium",
+        "condo",
+        "duplex",
+        "triplex",
+        "row house",
+        "townhouse"
+      ]
+    },
+    "Single-Family House": {
+      "class": "Residential",
+      "base": 800,
+      "max": 6000,
+      "aliases": [
+        "single-family house",
+        "single family house",
+        "single family",
+        "detached house"
+      ]
+    },
+    "Bungalow / Villa": {
+      "class": "Residential",
+      "base": 1200,
+      "max": 10000,
+      "aliases": [
+        "bungalow",
+        "bunglow",
+        "villa"
+      ]
+    },
+    "Penthouse": {
+      "class": "Residential",
+      "base": 2000,
+      "max": 15000,
+      "aliases": [
+        "penthouse"
+      ]
+    },
+    "Mansion": {
+      "class": "Residential",
+      "base": 3500,
+      "max": 25000,
+      "aliases": [
+        "mansion",
+        "estate home"
+      ]
+    },
+    "Farmhouse / Cottage": {
+      "class": "Residential",
+      "base": 500,
+      "max": 3500,
+      "aliases": [
+        "farmhouse",
+        "cottage"
+      ]
+    },
+    "Earth Shelter / Experimental Housing": {
+      "class": "Residential",
+      "base": 400,
+      "max": 3000,
+      "aliases": [
+        "earth shelter",
+        "experimental housing",
+        "earthship"
+      ]
+    },
+    "Office Buildings": {
+      "class": "Commercial",
+      "base": 1000,
+      "max": 8000,
+      "aliases": [
+        "office buildings",
+        "office building",
+        "office tower",
+        "office"
+      ]
+    },
+    "Retail Stores / Cafés / Restaurants": {
+      "class": "Commercial",
+      "base": 900,
+      "max": 7000,
+      "aliases": [
+        "retail stores",
+        "retail store",
+        "retail",
+        "cafes",
+        "cafe",
+        "restaurants",
+        "restaurant"
+      ]
+    },
+    "Shopping Malls": {
+      "class": "Commercial",
+      "base": 1500,
+      "max": 12000,
+      "aliases": [
+        "shopping malls",
+        "shopping mall",
+        "mall"
+      ]
+    },
+    "Hotels / Hostels / Motels": {
+      "class": "Commercial",
+      "base": 1200,
+      "max": 10000,
+      "aliases": [
+        "hotels",
+        "hotel",
+        "hostels",
+        "hostel",
+        "motels",
+        "motel"
+      ]
+    },
+    "Luxury Resorts": {
+      "class": "Commercial",
+      "base": 2000,
+      "max": 18000,
+      "aliases": [
+        "luxury resorts",
+        "luxury resort",
+        "resort"
+      ]
+    },
+    "Clinics / Banks / Showrooms": {
+      "class": "Commercial",
+      "base": 1100,
+      "max": 9000,
+      "aliases": [
+        "clinics",
+        "clinic",
+        "banks",
+        "bank",
+        "showrooms",
+        "showroom"
+      ]
+    },
+    "Warehouses / Supermarkets": {
+      "class": "Commercial",
+      "base": 600,
+      "max": 4000,
+      "aliases": [
+        "warehouses",
+        "warehouse",
+        "supermarkets",
+        "supermarket",
+        "hypermarket"
+      ]
+    },
+    "Convention Centers / Exhibition Halls": {
+      "class": "Commercial",
+      "base": 1800,
+      "max": 14000,
+      "aliases": [
+        "convention centers",
+        "convention center",
+        "exhibition halls",
+        "exhibition hall",
+        "theaters",
+        "theater",
+        "theatre"
+      ]
+    },
+    "Factories / Textile Mills / Breweries": {
+      "class": "Industrial",
+      "base": 400,
+      "max": 2500,
+      "aliases": [
+        "factories",
+        "factory",
+        "textile mills",
+        "textile mill",
+        "breweries",
+        "brewery"
+      ]
+    },
+    "Manufacturing Plants / Food Processing": {
+      "class": "Industrial",
+      "base": 600,
+      "max": 4000,
+      "aliases": [
+        "manufacturing plants",
+        "manufacturing plant",
+        "food processing",
+        "processing plant"
+      ]
+    },
+    "Distribution Centers / Industrial Warehouses": {
+      "class": "Industrial",
+      "base": 500,
+      "max": 3000,
+      "aliases": [
+        "distribution centers",
+        "distribution center",
+        "industrial warehouses",
+        "industrial warehouse",
+        "logistics center",
+        "logistics hub"
+      ]
+    },
+    "Refineries / Chemical Plants": {
+      "class": "Industrial",
+      "base": 900,
+      "max": 6000,
+      "aliases": [
+        "refineries",
+        "refinery",
+        "chemical plants",
+        "chemical plant"
+      ]
+    },
+    "Power Plants / Steel Mills": {
+      "class": "Industrial",
+      "base": 1200,
+      "max": 8000,
+      "aliases": [
+        "power plants",
+        "power plant",
+        "steel mills",
+        "steel mill"
+      ]
+    },
+    "Shipyards / Mining Facilities": {
+      "class": "Industrial",
+      "base": 800,
+      "max": 6500,
+      "aliases": [
+        "shipyards",
+        "shipyard",
+        "mining facilities",
+        "mining facility",
+        "mine"
+      ]
+    },
+    "Industrial Parks": {
+      "class": "Industrial",
+      "base": 700,
+      "max": 5000,
+      "aliases": [
+        "industrial parks",
+        "industrial park"
+      ]
+    },
+    "Barns / Storage Sheds / Fencing": {
+      "class": "Agricultural",
+      "base": 150,
+      "max": 800,
+      "aliases": [
+        "barns",
+        "barn",
+        "storage sheds",
+        "storage shed",
+        "fencing"
+      ]
+    },
+    "Silos / Greenhouses": {
+      "class": "Agricultural",
+      "base": 250,
+      "max": 1500,
+      "aliases": [
+        "silos",
+        "silo",
+        "greenhouses",
+        "greenhouse"
+      ]
+    },
+    "Poultry / Cattle / Dairy / Fish Farms": {
+      "class": "Agricultural",
+      "base": 300,
+      "max": 2000,
+      "aliases": [
+        "poultry farm",
+        "cattle farm",
+        "dairy farm",
+        "fish farm",
+        "livestock farm",
+        "aquaculture"
+      ]
+    },
+    "Crop Processing Units": {
+      "class": "Agricultural",
+      "base": 400,
+      "max": 2500,
+      "aliases": [
+        "crop processing units",
+        "crop processing unit",
+        "agri processing",
+        "grain processing"
+      ]
+    },
+    "Parks / Playgrounds": {
+      "class": "Recreational/Cultural",
+      "base": 200,
+      "max": 1200,
+      "aliases": [
+        "parks",
+        "park",
+        "playgrounds",
+        "playground"
+      ]
+    },
+    "Gyms / Clubs / Spas": {
+      "class": "Recreational/Cultural",
+      "base": 800,
+      "max": 6000,
+      "aliases": [
+        "gyms",
+        "gym",
+        "clubs",
+        "club",
+        "spas",
+        "spa",
+        "fitness center"
+      ]
+    },
+    "Stadiums / Sports Complexes": {
+      "class": "Recreational/Cultural",
+      "base": 1200,
+      "max": 9000,
+      "aliases": [
+        "stadiums",
+        "stadium",
+        "sports complexes",
+        "sports complex",
+        "arena"
+      ]
+    },
+    "Museums / Art Galleries / Zoos / Aquariums": {
+      "class": "Recreational/Cultural",
+      "base": 1000,
+      "max": 8000,
+      "aliases": [
+        "museums",
+        "museum",
+        "art galleries",
+        "art gallery",
+        "zoos",
+        "zoo",
+        "aquariums",
+        "aquarium"
+      ]
+    },
+    "Amusement Parks": {
+      "class": "Recreational/Cultural",
+      "base": 1500,
+      "max": 12000,
+      "aliases": [
+        "amusement parks",
+        "amusement park",
+        "theme park"
+      ]
+    },
+    "Schools / Colleges": {
+      "class": "Institutional",
+      "base": 700,
+      "max": 4500,
+      "aliases": [
+        "schools",
+        "school",
+        "colleges",
+        "college",
+        "academy"
+      ]
+    },
+    "Universities / Research Institutes": {
+      "class": "Institutional",
+      "base": 1000,
+      "max": 7000,
+      "aliases": [
+        "universities",
+        "university",
+        "research institutes",
+        "research institute",
+        "campus"
+      ]
+    },
+    "Hospitals": {
+      "class": "Institutional",
+      "base": 1500,
+      "max": 10000,
+      "aliases": [
+        "hospitals",
+        "hospital",
+        "medical center",
+        "medical facility"
+      ]
+    },
+    "Government Offices / Courts / Embassies": {
+      "class": "Institutional",
+      "base": 1200,
+      "max": 9000,
+      "aliases": [
+        "government offices",
+        "government office",
+        "courts",
+        "court",
+        "embassies",
+        "embassy"
+      ]
+    },
+    "Military Bases": {
+      "class": "Institutional",
+      "base": 900,
+      "max": 6000,
+      "aliases": [
+        "military bases",
+        "military base",
+        "defense facility",
+        "army base"
+      ]
+    },
+    "Residential + Commercial": {
+      "class": "Mixed-use",
+      "base": 1000,
+      "max": 9000,
+      "aliases": [
+        "residential + commercial",
+        "residential-commercial",
+        "mixed use residential commercial"
+      ]
+    },
+    "Residential + Office": {
+      "class": "Mixed-use",
+      "base": 1100,
+      "max": 10000,
+      "aliases": [
+        "residential + office",
+        "residential-office",
+        "mixed use office residential"
+      ]
+    },
+    "Mall + Office + Residential": {
+      "class": "Mixed-use",
+      "base": 1400,
+      "max": 14000,
+      "aliases": [
+        "mall + office + residential",
+        "mall office residential",
+        "integrated township",
+        "integrated development"
+      ]
+    },
+    "Transit-Oriented Developments": {
+      "class": "Mixed-use",
+      "base": 1300,
+      "max": 12000,
+      "aliases": [
+        "transit-oriented developments",
+        "transit oriented development",
+        "tod",
+        "metro corridor mixed use"
+      ]
+    },
+    "Smart Cities / Mega Developments": {
+      "class": "Mixed-use",
+      "base": 1500,
+      "max": 18000,
+      "aliases": [
+        "smart cities",
+        "smart city",
+        "mega developments",
+        "mega development",
+        "new town"
+      ]
+    },
+    "Highways / Canals / Pipelines": {
+      "class": "Infrastructure",
+      "base": 300,
+      "max": 2000,
+      "aliases": [
+        "highways",
+        "highway",
+        "canals",
+        "canal",
+        "pipelines",
+        "pipeline"
+      ]
+    },
+    "Airports / Seaports / Metro": {
+      "class": "Infrastructure",
+      "base": 1500,
+      "max": 12000,
+      "aliases": [
+        "airports",
+        "airport",
+        "seaports",
+        "seaport",
+        "metro",
+        "rail terminal"
+      ]
+    },
+    "Power / Water / Sewage Systems": {
+      "class": "Infrastructure",
+      "base": 800,
+      "max": 6000,
+      "aliases": [
+        "power system",
+        "water system",
+        "sewage system",
+        "utility infrastructure",
+        "water treatment",
+        "wastewater"
+      ]
+    },
+    "Parking Structures": {
+      "class": "Infrastructure",
+      "base": 600,
+      "max": 4000,
+      "aliases": [
+        "parking structures",
+        "parking structure",
+        "parking garage",
+        "multilevel parking"
+      ]
+    },
+    "Telecom Towers": {
+      "class": "Infrastructure",
+      "base": 1000,
+      "max": 7000,
+      "aliases": [
+        "telecom towers",
+        "telecom tower",
+        "cell tower",
+        "communication tower"
+      ]
+    },
+    "Skyscraper (Office)": {
+      "class": "Commercial",
+      "base": 2000,
+      "max": 20000,
+      "aliases": [
+        "skyscraper office",
+        "office skyscraper",
+        "office tower skyscraper",
+        "high-rise office tower",
+        "skyscraper"
+      ]
+    },
+    "Supertall Tower": {
+      "class": "Commercial",
+      "base": 2500,
+      "max": 30000,
+      "aliases": [
+        "supertall tower",
+        "supertall"
+      ]
+    },
+    "Mixed-Use Skyscraper": {
+      "class": "Mixed-use",
+      "base": 2800,
+      "max": 35000,
+      "aliases": [
+        "mixed-use skyscraper",
+        "mixed use skyscraper",
+        "mixed tower"
+      ]
+    },
+    "Luxury Branded Residences": {
+      "class": "Residential",
+      "base": 3000,
+      "max": 40000,
+      "aliases": [
+        "luxury branded residences",
+        "branded residences",
+        "ultra luxury residence",
+        "antilia"
+      ]
+    },
+    "Data Centers": {
+      "class": "Commercial",
+      "base": 1800,
+      "max": 12000,
+      "aliases": [
+        "data centers",
+        "data center",
+        "server farm"
+      ]
+    },
+    "Financial District Towers": {
+      "class": "Commercial",
+      "base": 2200,
+      "max": 25000,
+      "aliases": [
+        "financial district towers",
+        "financial tower",
+        "banking tower",
+        "ifc tower"
+      ]
+    },
+    "Corporate Campuses": {
+      "class": "Commercial",
+      "base": 1400,
+      "max": 9000,
+      "aliases": [
+        "corporate campuses",
+        "corporate campus",
+        "office campus",
+        "business park"
+      ]
+    },
+    "Logistics Megaparks": {
+      "class": "Industrial",
+      "base": 700,
+      "max": 5000,
+      "aliases": [
+        "logistics megaparks",
+        "logistics megapark",
+        "logistics park",
+        "freight park"
+      ]
+    },
+    "Spaceports": {
+      "class": "Infrastructure",
+      "base": 3000,
+      "max": 50000,
+      "aliases": [
+        "spaceports",
+        "spaceport",
+        "launch complex"
+      ]
+    },
+    "Nuclear Facilities": {
+      "class": "Infrastructure",
+      "base": 4000,
+      "max": 60000,
+      "aliases": [
+        "nuclear facilities",
+        "nuclear facility",
+        "nuclear plant"
+      ]
+    }
+  }
+}
