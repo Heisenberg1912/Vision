@@ -1369,6 +1369,9 @@ export default function Page() {
   const [authEmail, setAuthEmail] = useState<string | null>(null);
   const [authPlan, setAuthPlan] = useState<string | null>(null);
   const [authName, setAuthName] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [showAuthPanel, setShowAuthPanel] = useState(false);
+  const authPanelRef = useRef<HTMLDivElement>(null);
 
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [meta, setMeta] = useState({
@@ -1545,12 +1548,28 @@ export default function Page() {
       setAuthEmail(data.email);
       setAuthPlan(data.plan ?? "free");
       setAuthName(data.name ?? null);
+    } else {
+      // Server has no valid session — clear any stale client-side auth state
+      setAuthEmail(null);
+      setAuthPlan(null);
+      setAuthName(null);
     }
   }, []);
 
   useEffect(() => {
     refreshUsage().catch(() => {});
   }, [refreshUsage]);
+
+  useEffect(() => {
+    if (!showAuthPanel) return;
+    function handleOutsideClick(e: MouseEvent) {
+      if (authPanelRef.current && !authPanelRef.current.contains(e.target as Node)) {
+        setShowAuthPanel(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showAuthPanel]);
 
   const freeRemaining = usage ? (usage.freeRemaining === "∞" ? Infinity : usage.freeRemaining) : 0;
   const paywalled = usage ? !usage.paid && freeRemaining <= 0 : false;
@@ -1699,54 +1718,62 @@ export default function Page() {
 
   async function signIn() {
     setError(null);
-    if (authMode === "access-code") {
-      if (!accessCode.trim()) { setError("Access code is required"); return; }
-      const r = await apiFetch("/api/auth/access-code", {
+    setAuthLoading(true);
+    try {
+      if (authMode === "access-code") {
+        if (!accessCode.trim()) { setError("Access code is required"); return; }
+        const r = await apiFetch("/api/auth/access-code", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ code: accessCode.trim() })
+        });
+        const { data: j, text } = await readJson<any>(r);
+        if (!r.ok) { setError((j?.error ?? text) || "Invalid access code"); return; }
+        window.localStorage.setItem("va_access_code", accessCode.trim());
+        setAuthPlan(j?.plan ?? "pro");
+        setAccessCode("");
+        setAuthMode("login");
+        setShowAuthPanel(false);
+        await refreshUsage();
+        return;
+      }
+      if (authMode === "register") {
+        if (!regName.trim()) { setError("Name is required"); return; }
+        if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+        const r = await apiFetch("/api/auth/register", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, password, name: regName.trim() })
+        });
+        const { data: j, text } = await readJson<any>(r);
+        if (!r.ok) { setError(j?.error ?? "Registration failed. Please check your details and try again."); return; }
+        setAuthEmail(email.toLowerCase());
+        setAuthPlan(j?.plan ?? "free");
+        setAuthName(j?.name ?? regName.trim());
+        setEmail(""); setPassword(""); setRegName(""); setAuthMode("login");
+        setShowAuthPanel(false);
+        await refreshUsage();
+        return;
+      }
+      const r = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code: accessCode.trim() })
+        body: JSON.stringify({ email, password })
       });
       const { data: j, text } = await readJson<any>(r);
-      if (!r.ok) { setError((j?.error ?? text) || "Invalid access code"); return; }
-      window.localStorage.setItem("va_access_code", accessCode.trim());
-      setAuthPlan(j?.plan ?? "pro");
-      setAccessCode("");
-      setAuthMode("login");
-      await refreshUsage();
-      return;
-    }
-    if (authMode === "register") {
-      if (!regName.trim()) { setError("Name is required"); return; }
-      if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
-      const r = await apiFetch("/api/auth/register", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password, name: regName.trim() })
-      });
-      const { data: j, text } = await readJson<any>(r);
-      if (!r.ok) { setError((j?.error ?? text) || "Registration failed"); return; }
+      if (!r.ok) {
+        setError(j?.error ?? "Sign in failed. Please check your email and password.");
+        return;
+      }
       setAuthEmail(email.toLowerCase());
       setAuthPlan(j?.plan ?? "free");
-      setAuthName(j?.name ?? regName.trim());
-      setEmail(""); setPassword(""); setRegName(""); setAuthMode("login");
+      setAuthName(j?.name ?? null);
+      setEmail(""); setPassword("");
+      setShowAuthPanel(false);
       await refreshUsage();
-      return;
+    } finally {
+      setAuthLoading(false);
     }
-    const r = await apiFetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const { data: j, text } = await readJson<any>(r);
-    if (!r.ok) {
-      setError((j?.error ?? text) || "Failed");
-      return;
-    }
-    setAuthEmail(email.toLowerCase());
-    setAuthPlan(j?.plan ?? "free");
-    setAuthName(j?.name ?? null);
-    setEmail(""); setPassword("");
-    await refreshUsage();
   }
 
   async function signOut() {
@@ -1796,7 +1823,7 @@ export default function Page() {
     });
   }, [advanced?.recommendations, base, baseValid, geoFactors, meta.constructionType, meta.location, meta.note, meta.projectType, meta.scale, progressValue, selectedCategoryRow, stageLabel, status]);
 
-  const errorShort = error ? compactWords(error, 2) : null;
+  const errorShort = error ? compactWords(error, 4) : null;
 
   const constructionInsights =
     !baseValid ? [t("awaitingBase")] : paywalled ? [t("revealRisks")] : (resourcePlan?.constructionInsights ?? [t("pending")]).map((item) => cleanSentence(item));
@@ -1956,7 +1983,7 @@ export default function Page() {
 
       <header className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-4 px-4 pt-8 lg:grid-cols-[1fr_auto_1fr]">
         <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-          {errorShort ? <Badge>{errorShort}</Badge> : null}
+          {errorShort && !showAuthPanel ? <Badge style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}>{errorShort}</Badge> : null}
           {usage ? <Badge>{usage.paid ? "Pro" : `${Math.max(0, (usage.scansLimit ?? 3) - (usage.scansUsed ?? 0))}/${usage.scansLimit ?? 3}`}</Badge> : null}
         </div>
         <div className="text-center">
@@ -2007,83 +2034,165 @@ export default function Page() {
           </div>
           {authEmail ? (
             <>
-              <Badge>{authName ?? authEmail.split("@")[0]}</Badge>
-              <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                style={{
-                  background: authPlan === "pro" ? "rgba(124,58,237,0.2)" : "rgba(100,116,139,0.15)",
-                  color: authPlan === "pro" ? "#a78bfa" : "#94a3b8",
-                  border: authPlan === "pro" ? "1px solid rgba(124,58,237,0.3)" : "1px solid rgba(100,116,139,0.2)"
-                }}
-              >
-                {authPlan === "pro" ? "Pro" : "Free"}
-              </span>
+              {/* Logged-in user chip */}
+              <div className="flex items-center gap-1.5 rounded-xl border border-[color:var(--line)] bg-[color:var(--card)] px-3 py-1.5">
+                <span
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white"
+                  style={{ background: authPlan === "pro" ? "linear-gradient(135deg,#7c3aed,#a78bfa)" : "linear-gradient(135deg,#475569,#94a3b8)" }}
+                >
+                  {(authName ?? authEmail)[0].toUpperCase()}
+                </span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[11px] font-semibold text-[color:var(--text)]">{authName ?? authEmail.split("@")[0]}</span>
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider"
+                    style={{ color: authPlan === "pro" ? "#a78bfa" : "#94a3b8" }}
+                  >
+                    {authPlan === "pro" ? "Pro" : "Free"}
+                  </span>
+                </div>
+              </div>
               <Button variant="outline" onClick={signOut} className="h-9 px-3 text-xs">
                 Sign Out
               </Button>
             </>
-          ) : authMode === "access-code" ? (
-            <>
-              <input
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
-                placeholder="Enter access code"
-                onKeyDown={(e) => { if (e.key === "Enter" && accessCode.trim()) signIn(); }}
-                className="h-9 w-[180px] rounded-xl border border-[color:var(--line)] bg-[color:var(--card)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)]"
-              />
-              <Button onClick={signIn} disabled={!accessCode.trim()} className="h-9 px-3 text-xs">
-                Submit
-              </Button>
-              <button
-                onClick={() => setAuthMode("login")}
-                className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] underline"
+          ) : (
+            /* Auth dropdown trigger + panel */
+            <div className="relative" ref={authPanelRef}>
+              <Button
+                variant="outline"
+                onClick={() => { setShowAuthPanel(v => !v); setError(null); }}
+                className="h-9 px-3 text-xs font-semibold"
               >
                 Sign In
-              </button>
-            </>
-          ) : (
-            <>
-              {authMode === "register" && (
-                <input
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="Name"
-                  className="h-9 w-[120px] rounded-xl border border-[color:var(--line)] bg-[color:var(--card)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)]"
-                />
-              )}
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="h-9 w-[160px] rounded-xl border border-[color:var(--line)] bg-[color:var(--card)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)]"
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                onKeyDown={(e) => { if (e.key === "Enter" && email.includes("@") && password) signIn(); }}
-                className="h-9 w-[120px] rounded-xl border border-[color:var(--line)] bg-[color:var(--card)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)]"
-              />
-              <Button onClick={signIn} disabled={!email.includes("@") || !password} className="h-9 px-3 text-xs">
-                {authMode === "register" ? "Register" : "Sign In"}
               </Button>
-              <button
-                onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
-                className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] underline"
-              >
-                {authMode === "login" ? "Register" : "Sign In"}
-              </button>
-              <button
-                onClick={() => setAuthMode("access-code")}
-                className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] underline"
-              >
-                Access Code
-              </button>
-            </>
+
+              {showAuthPanel && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[color:var(--line)] bg-[color:var(--card)] p-5 shadow-2xl">
+                  {/* Panel header */}
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-bold text-[color:var(--text)]">
+                        {authMode === "register" ? "Create account" : authMode === "access-code" ? "Access code" : "Sign in"}
+                      </div>
+                      <div className="text-[10px] text-[color:var(--muted)]">
+                        {authMode === "register" ? "Free — 3 scans included" : authMode === "access-code" ? "Enter your code to unlock Pro" : "Welcome back"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowAuthPanel(false)}
+                      className="text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors text-lg leading-none"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Inline error */}
+                  {error && (
+                    <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-600" style={{ borderColor: "rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.07)", color: "#ef4444" }}>
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Form fields */}
+                  <div className="flex flex-col gap-2.5">
+                    {authMode === "access-code" ? (
+                      <input
+                        value={accessCode}
+                        onChange={(e) => setAccessCode(e.target.value)}
+                        placeholder="Access code"
+                        autoFocus
+                        disabled={authLoading}
+                        onKeyDown={(e) => { if (e.key === "Enter" && accessCode.trim() && !authLoading) signIn(); }}
+                        className="h-10 w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--bg)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)] disabled:opacity-50 transition-colors"
+                      />
+                    ) : (
+                      <>
+                        {authMode === "register" && (
+                          <input
+                            value={regName}
+                            onChange={(e) => setRegName(e.target.value)}
+                            placeholder="Full name"
+                            autoComplete="name"
+                            autoFocus
+                            disabled={authLoading}
+                            onKeyDown={(e) => { if (e.key === "Enter") { (e.currentTarget.nextElementSibling as HTMLInputElement | null)?.focus(); } }}
+                            className="h-10 w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--bg)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)] disabled:opacity-50 transition-colors"
+                          />
+                        )}
+                        <input
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Email address"
+                          type="email"
+                          autoComplete="email"
+                          autoFocus={authMode === "login"}
+                          disabled={authLoading}
+                          onKeyDown={(e) => { if (e.key === "Enter") { (e.currentTarget.nextElementSibling as HTMLInputElement | null)?.focus(); } }}
+                          className="h-10 w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--bg)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)] disabled:opacity-50 transition-colors"
+                        />
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Password"
+                          autoComplete={authMode === "register" ? "new-password" : "current-password"}
+                          disabled={authLoading}
+                          onKeyDown={(e) => { if (e.key === "Enter" && email.includes("@") && password && !authLoading) signIn(); }}
+                          className="h-10 w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--bg)] px-3 text-xs font-semibold text-[color:var(--text)] outline-none focus:border-[color:var(--text)] disabled:opacity-50 transition-colors"
+                        />
+                      </>
+                    )}
+
+                    <Button
+                      onClick={signIn}
+                      disabled={authMode === "access-code" ? (!accessCode.trim() || authLoading) : (!email.includes("@") || !password || authLoading)}
+                      className="h-10 w-full text-xs font-semibold"
+                    >
+                      {authLoading
+                        ? "Please wait..."
+                        : authMode === "register" ? "Create Account"
+                        : authMode === "access-code" ? "Apply Code"
+                        : "Sign In"}
+                    </Button>
+                  </div>
+
+                  {/* Footer links */}
+                  <div className="mt-3 flex items-center justify-between">
+                    {authMode !== "access-code" ? (
+                      <button
+                        onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setError(null); }}
+                        disabled={authLoading}
+                        className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors disabled:opacity-50"
+                      >
+                        {authMode === "login" ? "No account? Register" : "Have an account? Sign in"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setAuthMode("login"); setError(null); }}
+                        disabled={authLoading}
+                        className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors disabled:opacity-50"
+                      >
+                        Back to sign in
+                      </button>
+                    )}
+                    {authMode !== "access-code" && (
+                      <button
+                        onClick={() => { setAuthMode("access-code"); setError(null); }}
+                        disabled={authLoading}
+                        className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--text)] transition-colors disabled:opacity-50"
+                      >
+                        Access code
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           {authPlan !== "pro" && (
-          <Button variant="primary" onClick={upgrade} className="h-9 px-3 text-xs">
+          <Button variant="primary" onClick={() => { window.open("https://www.builtattic.com/products/subscription?variant=47204727128299", "_blank"); }} className="h-9 px-3 text-xs">
             Upgrade
           </Button>
           )}
@@ -2091,7 +2200,7 @@ export default function Page() {
       </header>
 
       <main className="mx-auto mt-6 max-w-[1400px] px-4 pb-12">
-        {error ? (
+        {error && !showAuthPanel ? (
           <div className="mb-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--card)] px-4 py-3">
             <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">Error</div>
             <div className="mt-2 break-words text-xs font-semibold text-[color:var(--text)]">{error}</div>
